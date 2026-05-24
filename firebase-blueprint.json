@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "Todo": {
+      "title": "Todo Item",
+      "description": "A todo list item containing text, completion state, priority, project, duration or alarm details, and owner UID.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The title or content of the todo item."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the todo is done or pending."
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["normal", "high"],
+          "description": "Priority level of the task."
+        },
+        "project": {
+          "type": "string",
+          "description": "Name of the project or category the task belongs to."
+        },
+        "time": {
+          "type": "string",
+          "description": "Optional scheduled time for the task (e.g., '14:30')."
+        },
+        "reminderMinutes": {
+          "type": "integer",
+          "description": "Minutes before the scheduled time to trigger a notification."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The Firebase Authentication UID of the owner."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the task was created."
+        }
+      },
+      "required": ["text", "completed", "userId"]
+    }
+  },
+  "firestore": {
+    "todos/{todoId}": {
+      "schema": "Todo",
+      "description": "Individual todo tasks linked to a user"
+    }
+  }
+}

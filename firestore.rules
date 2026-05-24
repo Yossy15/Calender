@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper to validate ID strings, e.g. letters, numbers, hyphens, underscores
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\\\-]+$');
+    }
+
+    // Helper to check user is signed in
+    function isSignedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // Helper to check ownership of resource
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Validation helper for Todo entity
+    function isValidTodo(data) {
+      return data.keys().hasAll(['text', 'completed', 'userId'])
+        && data.keys().size() <= 8
+        && data.text is string && data.text.size() > 0 && data.text.size() <= 200
+        && data.completed is bool
+        && data.userId is string && data.userId == request.auth.uid
+        && (!data.keys().hasAny(['priority']) || (data.priority is string && (data.priority == 'normal' || data.priority == 'high')))
+        && (!data.keys().hasAny(['project']) || (data.project is string && data.project.size() <= 50))
+        && (!data.keys().hasAny(['time']) || (data.time is string && data.time.size() <= 10))
+        && (!data.keys().hasAny(['reminderMinutes']) || (data.reminderMinutes is int && data.reminderMinutes >= 0 && data.reminderMinutes <= 1440))
+        && (!data.keys().hasAny(['createdAt']) || (data.createdAt is string || data.createdAt is timestamp));
+    }
+
+    // Rules for the todo sub-collection or root-level todos
+    match /todos/{todoId} {
+      allow get: if isSignedIn() && isOwner(resource.data.userId);
+      allow list: if isSignedIn() && request.query.limit <= 100 && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() 
+        && isValidId(todoId) 
+        && isValidTodo(request.resource.data);
+        
+      allow update: if isSignedIn() 
+        && isOwner(resource.data.userId) 
+        && isValidTodo(request.resource.data)
+        && request.resource.data.userId == resource.data.userId; // user ID cannot be reassigned
+        
+      allow delete: if isSignedIn() && isOwner(resource.data.userId);
+    }
+  }
+}

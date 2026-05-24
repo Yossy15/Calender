@@ -1,0 +1,6 @@
+{
+  "name": "Sleek Task",
+  "description": "A highly polished, dark-themed todo planner with notifications, statistics tracking, and Google account synchronization.",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
